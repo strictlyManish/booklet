@@ -1,111 +1,149 @@
-import React, { useState } from "react";
+import React from "react";
+import { useForm } from "react-hook-form";
+import axios from "axios";
+import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 function Register() {
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-  });
+  const navigate = useNavigate();
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm();
 
-  const [error, setError] = useState("");
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  const onSubmit = async (data) => {
+    try {
+      const response = await axios.post(
+        "http://localhost:3000/api/register",
+        {
+          username: data.username,
+          email: data.email,
+          password: data.password,
+        },
+        { withCredentials: true }
+      );
+      toast.success(response.data.message);
+      navigate("/login")
+    } catch (error) {
+      toast.error("Somthing went wrong");
+    }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    if (!formData.name || !formData.email || !formData.password || !formData.confirmPassword) {
-      setError("All fields are required!");
-      return;
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match!");
-      return;
-    }
-
-    setError("");
-    console.log("Register Data:", formData);
-    // TODO: Add API call or auth logic here
-  };
+  // Watch password for confirmPassword validation
+  const password = watch("password");
 
   return (
-    <div className="flex h-screen items-center justify-center bg-gray-900">
-      <div className="w-full max-w-md rounded-2xl bg-gray-900 shadow-lg p-8">
+    <div className="flex h-screen items-center justify-center bg-gray-950">
+      <div className="w-full max-w-md rounded-2xl">
         <h2 className="text-2xl font-bold text-center text-gray-200 mb-6">
-          Create Account 
-          <p className="text-[25px] font-light">Account creation for booklet.ai</p>
+          Create Account ❤️
         </h2>
 
-        {error && (
-          <div className="mb-4 rounded-lg bg-red-100 text-red-600 p-2 text-sm text-center">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          {/* Username */}
           <div>
             <label className="block text-sm font-medium text-gray-600">
               Username
             </label>
             <input
               type="text"
-              name="name"
-              value={formData.name}
-              onChange={handleChange}
               placeholder="Enter your name"
-              className="mt-1 w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 outline-none"
+              autoComplete="username"
+              {...register("username", { required: "Username is required" })}
+              className="mt-1 w-full rounded-lg border border-gray-300 p-3 text-sm 
+              focus:border-indigo-500 focus:ring focus:ring-indigo-200 outline-none"
             />
+            {errors.username && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.username.message}
+              </p>
+            )}
           </div>
-
+          {/* Email */}
           <div>
             <label className="block text-sm font-medium text-gray-600">
               Email
             </label>
             <input
               type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
               placeholder="Enter your email"
-              className="mt-1 w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 outline-none"
+              autoComplete="email"
+              {...register("email", {
+                required: "Email is required",
+                pattern: {
+                  value: /^[^@ ]+@[^@ ]+\.[^@ .]{2,}$/,
+                  message: "Enter a valid email address",
+                },
+              })}
+              className="mt-1 w-full rounded-lg border border-gray-300 p-3 text-sm 
+              focus:border-indigo-500 focus:ring focus:ring-indigo-200 outline-none"
             />
+            {errors.email && (
+              <p className="text-red-500 text-xs mt-1">
+                {errors.email.message}
+              </p>
+            )}
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-600">
-              Password
-            </label>
-            <input
-              type="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Enter your password"
-              className="mt-1 w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 outline-none"
-            />
+          <div className="flex justify-between">
+            {/* Password */}
+            <div>
+              <label className="block text-sm font-medium text-gray-600">
+                Password
+              </label>
+              <input
+                type="password"
+                placeholder="Enter your password"
+                autoComplete="new-password"
+                {...register("password", {
+                  required: "Password is required",
+                  minLength: {
+                    value: 6,
+                    message: "Password must be at least 6 characters",
+                  },
+                })}
+                className="mt-1 w-full rounded-lg border border-gray-300 p-3 text-sm 
+              focus:border-indigo-500 focus:ring focus:ring-indigo-200 outline-none"
+              />
+              {errors.password && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.password.message}
+                </p>
+              )}
+            </div>
+
+            {/* Confirm Password */}
+            <div>
+              <label className="block text-sm font-medium text-gray-600">
+                Confirm Password
+              </label>
+              <input
+                type="password"
+                placeholder="Confirm your password"
+                autoComplete="new-password"
+                {...register("confirmPassword", {
+                  required: "Confirm Password is required",
+                  validate: (value) =>
+                    value === password || "Passwords do not match",
+                })}
+                className="mt-1 w-full rounded-lg border border-gray-300 p-3 text-sm 
+              focus:border-indigo-500 focus:ring focus:ring-indigo-200 outline-none"
+              />
+              {errors.confirmPassword && (
+                <p className="text-red-500 text-xs mt-1">
+                  {errors.confirmPassword.message}
+                </p>
+              )}
+            </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-600">
-              Confirm Password
-            </label>
-            <input
-              type="password"
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleChange}
-              placeholder="Confirm your password"
-              className="mt-1 w-full rounded-lg border border-gray-300 p-3 text-sm focus:border-indigo-500 focus:ring focus:ring-indigo-200 outline-none"
-            />
-          </div>
-
+          {/* Submit Button */}
           <button
             type="submit"
-            className="w-full rounded-lg bg-indigo-600 p-3 text-white font-semibold hover:bg-indigo-700 transition"
+            className="w-full rounded-lg bg-indigo-600 p-3 text-white font-semibold 
+            hover:bg-indigo-700 transition"
           >
             Register
           </button>

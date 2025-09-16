@@ -1,21 +1,38 @@
 import React from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "react-toastify";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 function Login() {
+
+  const navigate = useNavigate();
+
+
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm();
 
-  const onSubmit = (data) => {
-    console.log("Login Data:", data);
-    
+  const onSubmit = async (data) => {
+    try {
+      const sendata = await axios.post(
+        "http://localhost:3000/api/login",
+        {
+          username: data.username,
+          password: data.password,
+        },
+        { withCredentials: true }
+      );
+      toast.success(sendata.data.message)
+      navigate('/')
+    } catch (error) {toast.error('Something went wrong')}
   };
 
   return (
     <div className="flex h-screen items-center justify-center bg-gray-950 px-4">
-      <div className="w-full max-w-md rounded-2xl bg-gray-900 shadow-xl p-8">
+      <div className="w-full max-w-md rounded-2xl  p-8">
         {/* Title */}
         <h2 className="text-3xl font-bold text-center text-white mb-6">
           Welcome Back <span className="text-indigo-400">👋</span>
@@ -76,7 +93,7 @@ function Login() {
           {/* Submit */}
           <button
             type="submit"
-            className="w-full rounded-lg bg-indigo-600 p-3 text-white font-semibold hover:bg-indigo-700 transition"
+            className="w-full cursor-pointer rounded-lg bg-indigo-600 p-3 text-white font-semibold hover:bg-indigo-700 transition"
           >
             Login
           </button>
